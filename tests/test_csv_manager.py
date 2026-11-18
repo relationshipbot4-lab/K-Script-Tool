@@ -70,6 +70,19 @@ class CSVManagerTests(unittest.TestCase):
         self.assertEqual(result["invalid_rows"], 3)
         self.assertEqual(self.store.count(), 1)
 
+    def test_sqlite_integer_overflow_is_reported_as_invalid_row(self):
+        path = self.directory / "overflow.csv"
+        path.write_text(
+            "user_id,source_id\n"
+            "9223372036854775808,123\n"
+            "5,999999999999999999999999999999999999\n",
+            encoding="utf-8",
+        )
+        result = import_members(path, store=self.store)
+        self.assertEqual(result["imported"], 0)
+        self.assertEqual(result["invalid_rows"], 2)
+        self.assertEqual(self.store.count(), 0)
+
     def test_missing_required_header_is_rejected_without_writes(self):
         path = self.directory / "missing-header.csv"
         path.write_text("username,first_name\nuser,Name\n", encoding="utf-8")
