@@ -19,7 +19,7 @@ The tool is intended for groups you own or are authorized to manage. It must res
 ```bash
 pkg update && pkg upgrade -y
 pkg install python git -y
-git clone https://github.com/relationshipbot4-lab/K-Script-Tool.git
+git clone --branch feature/phase-02-telegram-login https://github.com/relationshipbot4-lab/K-Script-Tool.git
 cd K-Script-Tool
 python -m venv .venv
 source .venv/bin/activate
@@ -27,7 +27,14 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` and add your own Telegram API credentials from https://my.telegram.org.
+Edit `.env` and set the exact variable names below using your own Telegram API credentials from https://my.telegram.org:
+
+```dotenv
+TELEGRAM_API_ID=your_api_id
+TELEGRAM_API_HASH=your_api_hash
+```
+
+Do not rename these variables to `API_ID` or `API_HASH`; the application reads `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`.
 
 Run:
 
@@ -37,7 +44,7 @@ python main.py
 
 Choose **[1] Telegram account setup**. Enter your phone number in international format, then the Telegram verification code. If two-step verification is enabled, enter its password when prompted; password input is hidden.
 
-The Telethon session is stored locally under `sessions/`. Never share or upload it to GitHub. To sign out, use Telegram's active-session settings or remove the local session files after closing the tool.
+The authentication flow uses Telethon's synchronous client interface because the command-line menu and login handler are synchronous. The Telethon session is stored locally under `sessions/`. Never share or upload it to GitHub. To sign out, use Telegram's active-session settings or remove the local session files after closing the tool.
 
 ## Security
 
@@ -57,7 +64,7 @@ K-Script-Tool/
 ├── tests/             # Unit tests
 ├── data/              # Local data (ignored by Git)
 ├── sessions/          # Telegram sessions (ignored by Git)
-├── logs/              # Local logs (ignored by Git)
+├── logs/              # Local data (ignored by Git)
 ├── config.py
 ├── main.py
 └── requirements.txt
