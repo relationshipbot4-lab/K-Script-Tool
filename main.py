@@ -2,6 +2,7 @@
 
 from config import DEVELOPER_NAME, TOOL_NAME
 from core.auth import authenticate_telegram_account
+from modules.scraper import run_scraper_menu
 
 
 def show_banner() -> None:
@@ -35,7 +36,9 @@ def main() -> None:
             break
         if choice == "1":
             authenticate_telegram_account()
-        elif choice in {"2", "3", "4", "5"}:
+        elif choice == "3":
+            run_scraper_menu()
+        elif choice in {"2", "4", "5"}:
             print("This module is scheduled for the next development phase.")
         else:
             print("Invalid option. Please choose 0-5.")
