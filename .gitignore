@@ -1,0 +1,41 @@
+# Secrets and environment
+.env
+.env.*
+!.env.example
+
+# Telegram authentication/session files
+sessions/
+*.session
+*.session-journal
+
+# Local member data and exports
+data/*
+!data/.gitkeep
+*.csv
+*.jsonl
+
+# Logs and runtime state
+logs/
+*.log
+*.sqlite3
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
