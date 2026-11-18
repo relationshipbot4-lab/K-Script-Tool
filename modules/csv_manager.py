@@ -20,6 +20,8 @@ CSV_FIELDS = (
 )
 REQUIRED_FIELDS = {"user_id"}
 OPTIONAL_TEXT_FIELDS = {"username", "first_name", "last_name", "source_title"}
+SQLITE_INTEGER_MIN = -(2**63)
+SQLITE_INTEGER_MAX = (2**63) - 1
 
 
 class CSVImportError(ValueError):
@@ -73,14 +75,19 @@ def export_members(
     return len(records)
 
 
-def _optional_integer(value: Any, field: str, line_number: int) -> int | None:
+def _parse_sqlite_integer(value: Any, field: str, line_number: int) -> int | None:
     text = str(value or "").strip()
     if not text:
         return None
     try:
-        return int(text)
+        number = int(text)
     except (TypeError, ValueError):
         raise ValueError(f"line {line_number}: {field} must be an integer.") from None
+    if not SQLITE_INTEGER_MIN <= number <= SQLITE_INTEGER_MAX:
+        raise ValueError(
+            f"line {line_number}: {field} is outside SQLite's supported integer range."
+        )
+    return number
 
 
 def import_members(
@@ -116,9 +123,10 @@ def import_members(
 
             for line_number, row in enumerate(reader, start=2):
                 try:
-                    raw_user_id = str(row.get("user_id") or "").strip()
-                    user_id = int(raw_user_id)
-                    if user_id <= 0:
+                    user_id = _parse_sqlite_integer(
+                        row.get("user_id"), "user_id", line_number
+                    )
+                    if user_id is None or user_id <= 0:
                         raise ValueError(
                             f"line {line_number}: user_id must be a positive integer."
                         )
@@ -127,7 +135,7 @@ def import_members(
                     for field in OPTIONAL_TEXT_FIELDS:
                         value = str(row.get(field) or "").strip()
                         member[field] = value or None
-                    member["source_id"] = _optional_integer(
+                    member["source_id"] = _parse_sqlite_integer(
                         row.get("source_id"), "source_id", line_number
                     )
 
