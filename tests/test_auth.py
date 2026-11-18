@@ -22,6 +22,8 @@ class AuthenticationTests(unittest.TestCase):
 
     def test_invalid_phone_is_rejected(self):
         client = Mock()
+        # Mock objects are truthy by default; explicitly model a logged-out client.
+        client.is_user_authorized.return_value = False
         output = []
 
         result = authenticate_telegram_account(
