@@ -12,6 +12,10 @@ from core.telegram import create_telegram_client
 from modules.storage import DEFAULT_DB_PATH, MemberStore
 
 
+class ScrapeRateLimitError(RuntimeError):
+    """A Telegram FloodWait that must be observed before retrying."""
+
+
 def scrape_members(
     client: Any,
     source: str | int,
@@ -65,7 +69,7 @@ def scrape_members(
             if progress_callback is not None:
                 progress_callback(scanned)
     except FloodWaitError as exc:
-        raise RuntimeError(
+        raise ScrapeRateLimitError(
             f"Telegram rate limit: wait {exc.seconds} seconds before retrying."
         ) from None
 
@@ -113,7 +117,9 @@ def run_scraper_menu(
             client,
             source,
             limit=limit,
-            progress_callback=lambda count: output_fn(f"Processed: {count}"),
+            progress_callback=lambda count: (
+                output_fn(f"Processed: {count}") if count % 25 == 0 else None
+            ),
         )
         output_fn(
             "Scrape complete: "
@@ -124,10 +130,11 @@ def run_scraper_menu(
     except KeyboardInterrupt:
         output_fn("Scraping interrupted. Records saved so far are kept.")
         return False
-    except Exception as exc:
-        # Only display known operational messages, never raw Telegram diagnostics.
-        message = str(exc) if isinstance(exc, (RuntimeError, ValueError)) else ""
-        output_fn(message or "Could not scrape this source. Check access and try again.")
+    except ScrapeRateLimitError as exc:
+        output_fn(str(exc))
+    except Exception:
+        # Do not expose raw Telegram RPC errors or account metadata.
+        output_fn("Could not scrape this source. Check access and try again.")
         return False
     finally:
         if connected:
