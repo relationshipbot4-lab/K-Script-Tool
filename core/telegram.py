@@ -1,12 +1,12 @@
 """Telegram client construction and connection helpers."""
 
-from telethon import TelegramClient
+from telethon.sync import TelegramClient
 
 from config import API_HASH, API_ID, SESSIONS_DIR, validate_telegram_config
 
 
 def create_telegram_client() -> TelegramClient:
-    """Create a Telethon client using locally configured credentials."""
+    """Create a synchronous Telethon client for the CLI authentication flow."""
     valid, message = validate_telegram_config()
     if not valid:
         raise RuntimeError(message)

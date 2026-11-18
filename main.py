@@ -1,6 +1,7 @@
 """Entry point for K SCRIPT TOOL."""
 
 from config import DEVELOPER_NAME, TOOL_NAME
+from core.auth import authenticate_telegram_account
 
 
 def show_banner() -> None:
@@ -32,7 +33,9 @@ def main() -> None:
         if choice == "0":
             print("Goodbye!")
             break
-        if choice in {"1", "2", "3", "4", "5"}:
+        if choice == "1":
+            authenticate_telegram_account()
+        elif choice in {"2", "3", "4", "5"}:
             print("This module is scheduled for the next development phase.")
         else:
             print("Invalid option. Please choose 0-5.")
