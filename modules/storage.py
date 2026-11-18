@@ -44,9 +44,13 @@ class MemberStore:
             )
 
     def save_member(self, member: dict) -> bool:
-        """Insert or refresh one member. Return True for a new user ID."""
+        """Upsert one member; return True only when the ID was not already stored."""
+        user_id = int(member["user_id"])
         with self._connect() as connection:
-            cursor = connection.execute(
+            exists = connection.execute(
+                "SELECT 1 FROM members WHERE user_id = ?", (user_id,)
+            ).fetchone() is not None
+            connection.execute(
                 """
                 INSERT INTO members
                     (user_id, username, first_name, last_name, source_id, source_title)
@@ -60,7 +64,7 @@ class MemberStore:
                     scraped_at=CURRENT_TIMESTAMP
                 """,
                 (
-                    int(member["user_id"]),
+                    user_id,
                     member.get("username"),
                     member.get("first_name"),
                     member.get("last_name"),
@@ -68,7 +72,7 @@ class MemberStore:
                     member.get("source_title"),
                 ),
             )
-            return cursor.rowcount == 1 and self.count() == 1
+            return not exists
 
     def save_members(self, members: Iterable[dict]) -> int:
         """Upsert a batch and return the number of supplied records."""
