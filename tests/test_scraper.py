@@ -4,7 +4,9 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from modules.scraper import scrape_members
+from telethon.errors import FloodWaitError
+
+from modules.scraper import ScrapeRateLimitError, scrape_members
 
 
 class FakeStore:
@@ -60,6 +62,21 @@ class ScraperTests(unittest.TestCase):
         self.assertEqual(result["scanned"], 0)
         self.assertEqual(result["saved"], 0)
         self.assertEqual(store.members, {})
+
+    def test_flood_wait_is_reported_without_retry(self):
+        client = Mock()
+        client.get_entity.return_value = SimpleNamespace(id=6, title="Group")
+
+        def members(_entity, limit=None):
+            raise FloodWaitError(None, 42)
+            yield  # Make this a generator.
+
+        client.iter_participants.side_effect = members
+        with self.assertRaisesRegex(ScrapeRateLimitError, "42 seconds"):
+            scrape_members(client, 6, store=FakeStore())
+        client.iter_participants.assert_called_once_with(
+            client.get_entity.return_value, limit=None
+        )
 
     def test_invalid_limit_is_rejected(self):
         with self.assertRaises(ValueError):
