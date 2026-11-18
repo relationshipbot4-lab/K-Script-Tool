@@ -2,6 +2,7 @@
 
 from config import DEVELOPER_NAME, TOOL_NAME
 from core.auth import authenticate_telegram_account
+from modules.csv_manager import run_csv_menu
 from modules.scraper import run_scraper_menu
 
 
@@ -36,10 +37,12 @@ def main() -> None:
             break
         if choice == "1":
             authenticate_telegram_account()
+        elif choice == "2":
+            run_csv_menu()
         elif choice == "3":
             run_scraper_menu()
-        elif choice in {"2", "4", "5"}:
-            print("This module is scheduled for the next development phase.")
+        elif choice in {"4", "5"}:
+            print("This module is scheduled for a later development phase.")
         else:
             print("Invalid option. Please choose 0-5.")
 

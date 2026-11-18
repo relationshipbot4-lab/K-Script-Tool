@@ -10,7 +10,7 @@ A Python-based Telegram group management utility designed for Android Termux.
 
 ## Current status
 
-Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. CSV import/export, reporting, and invitation workflows are planned for later phases.
+Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Invitation workflows and activity reports are planned for later phases.
 
 The tool is intended for groups you own or are authorized to manage. It must respect Telegram permissions, user privacy settings, rate limits, and anti-spam protections. It does not bypass invite restrictions or attempt to evade FloodWait limits.
 
@@ -44,6 +44,8 @@ python main.py
 
 Choose **[1] Telegram account setup**. Enter your phone number in international format, then the Telegram verification code. If two-step verification is enabled, enter its password when prompted; password input is hidden. After login, choose **[3] Member-list tools**, enter a group username or ID that the account can access, and optionally set a positive member limit. Records are stored locally in `data/members.sqlite3` and deduplicated by Telegram user ID. Press Ctrl+C to stop; records saved so far are retained.
 
+Choose **[2] Import / export member list** to export all stored records to a CSV file or import a CSV file. Exports use UTF-8 with BOM for spreadsheet compatibility. Imports accept UTF-8/UTF-8-BOM, require a `user_id` column, skip invalid rows, and deduplicate repeated IDs (the last valid row wins). Existing records with the same user ID are updated. Review the file path and confirm before importing. CSV files may contain personal member data; keep them local and never commit them to GitHub.
+
 The authentication flow uses Telethon's synchronous client interface because the command-line menu and login handler are synchronous. The Telethon session is stored locally under `sessions/`. Never share or upload it to GitHub. To sign out, use Telegram's active-session settings or remove the local session files after closing the tool.
 
 ## Security
@@ -60,7 +62,7 @@ The authentication flow uses Telethon's synchronous client interface because the
 K-Script-Tool/
 ├── .github/workflows/ # Automated tests
 ├── core/              # Telegram client and authentication
-├── modules/           # Authorized scraper, local storage, import/export, invitations, reports
+├── modules/           # Scraper, storage, CSV import/export, invitations, reports
 ├── tests/             # Unit tests
 ├── data/              # Local data (ignored by Git)
 ├── sessions/          # Telegram sessions (ignored by Git)
