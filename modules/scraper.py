@@ -123,7 +123,7 @@ def run_scraper_menu(
             record_operation("member_scrape", "success", details={"processed": result["scanned"], "saved": result["saved"], "skipped": result["skipped"]})
             output_fn(
                 "Scrape complete: "
-            f"{result['saved']} saved, {result['skipped']} skipped; "
+                f"{result['saved']} saved, {result['skipped']} skipped; "
                 f"{result['total_stored']} unique records stored locally."
             )
             return True
