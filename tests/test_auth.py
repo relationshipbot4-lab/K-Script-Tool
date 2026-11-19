@@ -177,6 +177,18 @@ class AuthenticationTests(unittest.TestCase):
         client.disconnect.assert_called_once()
         self.assertTrue(any("no verification code" in line for line in output))
 
+    def test_disconnect_runs_after_connection_failure(self):
+        client = Mock()
+        client.connect.side_effect = RuntimeError("connection diagnostics")
+        output = []
+
+        result = authenticate_telegram_account(client=client, output_fn=output.append)
+
+        self.assertFalse(result)
+        client.disconnect.assert_called_once()
+        self.assertTrue(any("Telegram login failed" in line for line in output))
+        self.assertFalse(any("connection diagnostics" in line for line in output))
+
     def test_disconnect_runs_after_unexpected_rpc_failure(self):
         client = Mock()
         client.is_user_authorized.return_value = False

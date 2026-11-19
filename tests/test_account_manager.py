@@ -23,6 +23,15 @@ class AccountManagerTests(unittest.TestCase):
         self.assertIn("Phone: ***901", "\n".join(out))
         self.assertNotIn("+12345678901", "\n".join(out))
 
+    def test_disconnect_is_attempted_after_connect_failure(self):
+        client = Mock()
+        client.connect.side_effect = RuntimeError("private connection details")
+        out = []
+        run_account_management_menu(client=client, output_fn=out.append)
+        client.disconnect.assert_called_once()
+        self.assertTrue(any("Account management failed" in line for line in out))
+        self.assertFalse(any("private connection details" in line for line in out))
+
     def test_unauthorized_session_reports_no_active_login(self):
         client = Mock()
         client.is_user_authorized.return_value = False

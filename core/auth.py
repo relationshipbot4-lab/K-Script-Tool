@@ -46,8 +46,8 @@ def authenticate_telegram_account(
     connected = False
 
     try:
+        connected = True  # Ensure cleanup is attempted even if connect partially fails.
         telegram.connect()
-        connected = True
 
         if telegram.is_user_authorized():
             user = telegram.get_me()

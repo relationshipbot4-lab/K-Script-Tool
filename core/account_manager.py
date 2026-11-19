@@ -36,8 +36,8 @@ def run_account_management_menu(
     telegram = client or create_telegram_client()
     connected = False
     try:
+        connected = True  # Ensure cleanup is attempted even if connect partially fails.
         telegram.connect()
-        connected = True
         if not telegram.is_user_authorized():
             output_fn("No authorized Telegram session is active.")
             return
