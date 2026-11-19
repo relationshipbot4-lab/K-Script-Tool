@@ -49,6 +49,8 @@ def scrape_members(
             if stop_event is not None and stop_event.is_set():
                 break
             scanned += 1
+            if progress_callback is not None:
+                progress_callback(scanned)
             if getattr(user, "deleted", False) or getattr(user, "bot", False):
                 skipped += 1
                 continue
@@ -67,8 +69,6 @@ def scrape_members(
                 }
             )
             saved += 1
-            if progress_callback is not None:
-                progress_callback(scanned)
     except FloodWaitError as exc:
         raise ScrapeRateLimitError(
             f"Telegram rate limit: wait {exc.seconds} seconds before retrying."
