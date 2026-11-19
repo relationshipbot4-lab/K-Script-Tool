@@ -10,7 +10,7 @@ A Python-based Telegram group management utility designed for Android Termux.
 
 ## Current status
 
-Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Phase 5 adds public-group joining via Telegram's normal join request, private invite-link importing, and authorized invite-link creation. Phase 6 adds a sanitized local activity history for CSV import/export, member scraping, and group join/invite operations, plus a summary report. Phase 7 audit updates stream report summaries to keep memory use bounded and add validation tests.
+Phases 2–7 delivered the initial authentication, authorized member scraping/local storage, CSV import/export, group join/invite workflows, activity reporting, and report-streaming audit. Phase 8 adds terminal clearing/redraw on startup and menu return. Phase 9 adds account profile viewing, masked phone display, and confirmed logout. Phase 10 hardens best-effort cleanup after connection failures. Phase 11 fixes scrape progress to count every scanned member, including skipped records. Phase 12 adds CSV export destination-path regression coverage. Phase 13 adds invite-link workflow regression tests. Phase 14 validates and normalizes report timestamps to UTC on read. Phase 15 centralizes Telegram client connection/disconnect lifecycle handling. Phase 16 documents CSV spreadsheet formula risks and checks repository secret/data ignore rules. Phase 17 expands main-menu navigation tests. Phase 18 is the final CI/documentation release gate.
 
 The tool is intended for groups you own or are authorized to manage. It must respect Telegram permissions, user privacy settings, rate limits, and anti-spam protections. It does not bypass invite restrictions or attempt to evade FloodWait limits.
 
@@ -77,3 +77,16 @@ K-Script-Tool/
 ## Development
 
 Features are added in small, reviewable stages. Existing behavior and public function names should be preserved when extending the project.
+
+## Release gate
+
+Before running on a real Termux device:
+
+1. Run the full test suite: `python -m unittest discover -s tests -v`.
+2. Compile-check the project: `python -m compileall -q .`.
+3. Configure credentials only in your local `.env` file.
+4. Verify `.env`, Telegram session files, local databases, CSV exports, and logs remain untracked.
+5. Test account login/profile/logout on the user's device and verify Telegram session state after logout.
+6. Verify authorized group scraping, CSV import/export, group join/invite behavior, FloodWait handling, and terminal redraw on Termux using only accounts/groups the user is authorized to manage.
+
+**Device validation is still required.** GitHub Actions passing does not substitute for testing Telegram RPC behavior or terminal UX on a real Android/Termux environment. This repository does not implement a direct member-add workflow; `modules/adder.py` remains a placeholder.
