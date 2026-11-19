@@ -66,7 +66,9 @@ def _iter_valid_events(path: str | Path) -> Iterator[dict[str, Any]]:
                     continue
                 if (
                     isinstance(event, dict)
+                    and isinstance(event.get("operation"), str)
                     and event.get("operation") in _ALLOWED_OPERATIONS
+                    and isinstance(event.get("outcome"), str)
                     and event.get("outcome") in _ALLOWED_OUTCOMES
                     and isinstance(event.get("timestamp"), str)
                 ):
