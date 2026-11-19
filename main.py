@@ -2,6 +2,7 @@
 
 from config import DEVELOPER_NAME, TOOL_NAME
 from core.auth import authenticate_telegram_account
+from core.account_manager import run_account_management_menu
 from modules.csv_manager import run_csv_menu
 from modules.scraper import run_scraper_menu
 from modules.invite import run_invite_menu
@@ -30,6 +31,7 @@ def show_menu() -> None:
     print("[3] Member-list tools")
     print("[4] Invitation management")
     print("[5] Activity report")
+    print("[6] Account management")
     print("[0] Exit")
 
 
@@ -53,10 +55,12 @@ def main() -> None:
             run_invite_menu()
         elif choice == "5":
             run_report_menu()
+        elif choice == "6":
+            run_account_management_menu()
         else:
-            print("Invalid option. Please choose 0-5.")
+            print("Invalid option. Please choose 0-6.")
 
-        if choice in {"1", "2", "3", "4", "5"}:
+        if choice in {"1", "2", "3", "4", "5", "6"}:
             clear_screen()
             show_banner()
 
