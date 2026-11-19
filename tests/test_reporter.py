@@ -57,7 +57,7 @@ class ReporterTests(unittest.TestCase):
             "outcome": "success",
             "details": {},
         }
-        self.path.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+        self.path.write_text(json.dumps(event) + "\n", encoding="utf-8")
         reports = read_reports(path=self.path)
         self.assertEqual(reports[0]["timestamp"], "2026-11-19T00:00:00+00:00")
 
