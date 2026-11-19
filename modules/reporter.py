@@ -72,6 +72,17 @@ def _iter_valid_events(path: str | Path) -> Iterator[dict[str, Any]]:
                     and event.get("outcome") in _ALLOWED_OUTCOMES
                     and isinstance(event.get("timestamp"), str)
                 ):
+                    try:
+                        parsed_timestamp = datetime.fromisoformat(
+                            event["timestamp"].replace("Z", "+00:00")
+                        )
+                        if parsed_timestamp.tzinfo is None:
+                            continue
+                        event["timestamp"] = parsed_timestamp.astimezone(
+                            timezone.utc
+                        ).isoformat(timespec="seconds")
+                    except (TypeError, ValueError):
+                        continue
                     yield event
     except (OSError, UnicodeDecodeError):
         return
