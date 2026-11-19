@@ -13,7 +13,7 @@ class MainMenuTests(unittest.TestCase):
         output = StringIO()
         with redirect_stdout(output):
             main.clear_screen()
-        self.assertEqual(output.getvalue(), "\\033[2J\\033[H")
+        self.assertEqual(output.getvalue(), "\033[2J\033[H")
 
     def test_startup_clears_and_shows_banner(self):
         with patch.object(main, "clear_screen") as clear_mock, patch.object(
