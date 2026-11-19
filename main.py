@@ -5,6 +5,7 @@ from core.auth import authenticate_telegram_account
 from modules.csv_manager import run_csv_menu
 from modules.scraper import run_scraper_menu
 from modules.invite import run_invite_menu
+from modules.reporter import run_report_menu
 
 
 def show_banner() -> None:
@@ -45,7 +46,7 @@ def main() -> None:
         elif choice == "4":
             run_invite_menu()
         elif choice == "5":
-            print("This module is scheduled for a later development phase.")
+            run_report_menu()
         else:
             print("Invalid option. Please choose 0-5.")
 
