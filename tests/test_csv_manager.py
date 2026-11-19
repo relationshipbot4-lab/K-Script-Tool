@@ -95,6 +95,12 @@ class CSVManagerTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             import_members(self.directory / "absent.csv", store=self.store)
 
+    def test_export_rejects_missing_parent_directory(self):
+        destination = self.directory / "missing" / "out.csv"
+        with self.assertRaises(FileNotFoundError):
+            export_members(destination, store=self.store)
+        self.assertFalse(destination.parent.exists())
+
     def test_export_empty_database_writes_header(self):
         path = self.directory / "empty.csv"
         self.assertEqual(export_members(path, store=self.store), 0)
