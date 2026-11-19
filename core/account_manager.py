@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from core.telegram import create_telegram_client
+from core.telegram import connected_telegram_client
 
 
 def _mask_phone(phone: str | None) -> str:
@@ -33,42 +33,33 @@ def run_account_management_menu(
     output_fn: Callable[[str], None] = print,
 ) -> None:
     """Show the configured session's status/profile and offer confirmed sign-out."""
-    telegram = client or create_telegram_client()
-    connected = False
     try:
-        connected = True  # Ensure cleanup is attempted even if connect partially fails.
-        telegram.connect()
-        if not telegram.is_user_authorized():
-            output_fn("No authorized Telegram session is active.")
-            return
-
-        while True:
-            output_fn("\n[1] View account profile")
-            output_fn("[2] Log out this Telegram account")
-            output_fn("[0] Back to main menu")
-            choice = input_fn("Select an option: ").strip()
-
-            if choice == "0":
+        with connected_telegram_client(client) as telegram:
+            if not telegram.is_user_authorized():
+                output_fn("No authorized Telegram session is active.")
                 return
-            if choice == "1":
-                _display_profile(telegram.get_me(), output_fn)
-            elif choice == "2":
-                confirm = input_fn("Log out and revoke this Telegram session? (y/N): ").strip().lower()
-                if confirm not in {"y", "yes"}:
-                    output_fn("Logout cancelled.")
-                    continue
-                if telegram.log_out():
-                    output_fn("Logged out. This local session is no longer authorized.")
+
+            while True:
+                output_fn("\n[1] View account profile")
+                output_fn("[2] Log out this Telegram account")
+                output_fn("[0] Back to main menu")
+                choice = input_fn("Select an option: ").strip()
+
+                if choice == "0":
+                    return
+                if choice == "1":
+                    _display_profile(telegram.get_me(), output_fn)
+                elif choice == "2":
+                    confirm = input_fn("Log out and revoke this Telegram session? (y/N): ").strip().lower()
+                    if confirm not in {"y", "yes"}:
+                        output_fn("Logout cancelled.")
+                        continue
+                    if telegram.log_out():
+                        output_fn("Logged out. This local session is no longer authorized.")
+                    else:
+                        output_fn("Telegram did not confirm logout. Session status may be unchanged.")
+                    return
                 else:
-                    output_fn("Telegram did not confirm logout. Session status may be unchanged.")
-                return
-            else:
-                output_fn("Invalid option. Please choose 0-2.")
+                    output_fn("Invalid option. Please choose 0-2.")
     except Exception:
         output_fn("Account management failed. Check your connection and local configuration.")
-    finally:
-        if connected:
-            try:
-                telegram.disconnect()
-            except Exception:
-                pass

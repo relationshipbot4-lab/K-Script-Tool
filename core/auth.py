@@ -20,7 +20,7 @@ from telethon.errors import (
     SessionPasswordNeededError,
 )
 
-from core.telegram import create_telegram_client
+from core.telegram import connected_telegram_client
 
 
 def _normalize_phone(value: str) -> str:
@@ -42,50 +42,45 @@ def authenticate_telegram_account(
     The Telethon session is persisted locally by the configured session backend.
     Returns True only when the account is authorized.
     """
-    telegram = client or create_telegram_client()
-    connected = False
-
     try:
-        connected = True  # Ensure cleanup is attempted even if connect partially fails.
-        telegram.connect()
+        with connected_telegram_client(client) as telegram:
+            if telegram.is_user_authorized():
+                user = telegram.get_me()
+                output_fn(f"Already logged in as {user.id}.")
+                return True
 
-        if telegram.is_user_authorized():
-            user = telegram.get_me()
-            output_fn(f"Already logged in as {user.id}.")
-            return True
-
-        try:
-            phone = _normalize_phone(input_fn("Phone number (international format): ").strip())
-        except ValueError as exc:
-            output_fn(str(exc))
-            return False
-
-        sent_code = telegram.send_code_request(phone)
-        code = input_fn("Telegram login code: ").strip()
-        if not code:
-            output_fn("Login cancelled: no verification code was entered.")
-            return False
-
-        try:
-            telegram.sign_in(
-                phone=phone,
-                code=code,
-                phone_code_hash=sent_code.phone_code_hash,
-            )
-        except SessionPasswordNeededError:
-            password = secret_input_fn("Two-step verification password: ")
-            if not password:
-                output_fn("Login cancelled: no 2FA password was entered.")
+            try:
+                phone = _normalize_phone(input_fn("Phone number (international format): ").strip())
+            except ValueError as exc:
+                output_fn(str(exc))
                 return False
-            telegram.sign_in(password=password)
 
-        if not telegram.is_user_authorized():
-            output_fn("Login could not be confirmed. Please try again.")
-            return False
+            sent_code = telegram.send_code_request(phone)
+            code = input_fn("Telegram login code: ").strip()
+            if not code:
+                output_fn("Login cancelled: no verification code was entered.")
+                return False
 
-        user = telegram.get_me()
-        output_fn(f"Login successful. Account ID: {user.id}")
-        return True
+            try:
+                telegram.sign_in(
+                    phone=phone,
+                    code=code,
+                    phone_code_hash=sent_code.phone_code_hash,
+                )
+            except SessionPasswordNeededError:
+                password = secret_input_fn("Two-step verification password: ")
+                if not password:
+                    output_fn("Login cancelled: no 2FA password was entered.")
+                    return False
+                telegram.sign_in(password=password)
+
+            if not telegram.is_user_authorized():
+                output_fn("Login could not be confirmed. Please try again.")
+                return False
+
+            user = telegram.get_me()
+            output_fn(f"Login successful. Account ID: {user.id}")
+            return True
 
     except FloodWaitError as exc:
         output_fn(
@@ -103,11 +98,5 @@ def authenticate_telegram_account(
     except Exception:
         # Avoid printing exception details that may contain account/session metadata.
         output_fn("Telegram login failed. Check your connection and local configuration.")
-    finally:
-        if connected:
-            try:
-                telegram.disconnect()
-            except Exception:
-                pass
 
     return False
