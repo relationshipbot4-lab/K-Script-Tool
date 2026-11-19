@@ -10,7 +10,7 @@ A Python-based Telegram group management utility designed for Android Termux.
 
 ## Current status
 
-Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Invitation workflows and activity reports are planned for later phases.
+Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Phase 5 adds public-group joining via Telegram's normal join request, private invite-link importing, and authorized invite-link creation. Activity reports are planned for Phase 6.
 
 The tool is intended for groups you own or are authorized to manage. It must respect Telegram permissions, user privacy settings, rate limits, and anti-spam protections. It does not bypass invite restrictions or attempt to evade FloodWait limits.
 
@@ -46,7 +46,7 @@ Choose **[1] Telegram account setup**. Enter your phone number in international 
 
 Choose **[2] Import / export member list** to export all stored records to a CSV file or import a CSV file. Exports use UTF-8 with BOM for spreadsheet compatibility. Imports accept UTF-8/UTF-8-BOM, require a `user_id` column, skip invalid rows, and deduplicate repeated IDs (the last valid row wins). Existing records with the same user ID are updated. Review the file path and confirm before importing. CSV files may contain personal member data; keep them local and never commit them to GitHub.
 
-The authentication flow uses Telethon's synchronous client interface because the command-line menu and login handler are synchronous. The Telethon session is stored locally under `sessions/`. Never share or upload it to GitHub. To sign out, use Telegram's active-session settings or remove the local session files after closing the tool.
+Choose **[4] Invitation management** to join public groups by username or private groups using a valid invite link, or create an invite link for groups you administer. Join and invite operations respect Telegram permissions and FloodWait responses; invite links are only created when your account has the required admin rights. Direct member-add workflows are not enabled in this phase.\n\nThe authentication flow uses Telethon's synchronous client interface because the command-line menu and login handler are synchronous. The Telethon session is stored locally under `sessions/`. Never share or upload it to GitHub. To sign out, use Telegram's active-session settings or remove the local session files after closing the tool.
 
 ## Security
 
