@@ -28,6 +28,19 @@ class JoinTests(unittest.TestCase):
         result = join_group(client, "https://t.me/+InviteHash123")
         self.assertEqual(result["title"], "Private")
 
+    def test_public_telegram_url_normalizes_username(self):
+        client = Mock()
+        client.get_entity.return_value = SimpleNamespace(title="Group", username="group")
+        result = join_group(client, "https://t.me/@group")
+        self.assertEqual(result["status"], "joined")
+        client.get_entity.assert_called_once_with("group")
+
+    def test_internal_private_group_link_is_rejected(self):
+        client = Mock()
+        with self.assertRaises(GroupJoinError):
+            join_group(client, "https://t.me/c/123456/7")
+        client.get_entity.assert_not_called()
+
     def test_join_flood_wait(self):
         client = Mock()
         client.get_entity.return_value = object()
@@ -42,6 +55,13 @@ class InviteTests(unittest.TestCase):
         client.get_entity.return_value = SimpleNamespace(title="Managed")
         client.return_value = SimpleNamespace(link="https://t.me/+generated")
         self.assertEqual(create_invite_link(client, "group")["link"], "https://t.me/+generated")
+
+    def test_missing_invite_link_response_is_rejected(self):
+        client = Mock()
+        client.get_entity.return_value = SimpleNamespace(title="Managed")
+        client.return_value = SimpleNamespace(link=None)
+        with self.assertRaisesRegex(InviteLinkError, "did not return an invite link"):
+            create_invite_link(client, "group")
 
     def test_invite_flood_wait(self):
         client = Mock()
