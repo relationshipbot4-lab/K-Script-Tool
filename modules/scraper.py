@@ -8,7 +8,7 @@ from typing import Any
 
 from telethon.errors import FloodWaitError
 
-from core.telegram import create_telegram_client
+from core.telegram import create_telegram_client, connected_telegram_client
 from modules.storage import DEFAULT_DB_PATH, MemberStore
 from modules.reporter import record_operation
 
@@ -89,46 +89,44 @@ def run_scraper_menu(
 ) -> bool:
     """Run one interactive scrape using an already-authorized local session."""
     client = create_telegram_client()
-    connected = False
     try:
-        client.connect()
-        connected = True
-        if not client.is_user_authorized():
-            output_fn("Please choose [1] Telegram account setup before scraping.")
-            return False
+        with connected_telegram_client(client):
+            if not client.is_user_authorized():
+                output_fn("Please choose [1] Telegram account setup before scraping.")
+                return False
 
-        source = input_fn("Source group username or ID: ").strip()
-        if not source:
-            output_fn("No source was provided.")
-            return False
-        if source.lstrip("-").isdigit():
-            source = int(source)
+            source = input_fn("Source group username or ID: ").strip()
+            if not source:
+                output_fn("No source was provided.")
+                return False
+            if source.lstrip("-").isdigit():
+                source = int(source)
 
-        limit_text = input_fn("Maximum members (Enter for all accessible members): ").strip()
-        try:
-            limit = int(limit_text) if limit_text else None
-            if limit is not None and limit < 1:
-                raise ValueError
-        except ValueError:
-            output_fn("Member limit must be a positive whole number.")
-            return False
+            limit_text = input_fn("Maximum members (Enter for all accessible members): ").strip()
+            try:
+                limit = int(limit_text) if limit_text else None
+                if limit is not None and limit < 1:
+                    raise ValueError
+            except ValueError:
+                output_fn("Member limit must be a positive whole number.")
+                return False
 
-        output_fn("Scraping started. Press Ctrl+C to stop safely.")
-        result = scrape_members(
-            client,
-            source,
-            limit=limit,
-            progress_callback=lambda count: (
-                output_fn(f"Processed: {count}") if count % 25 == 0 else None
-            ),
-        )
-        record_operation("member_scrape", "success", details={"processed": result["scanned"], "saved": result["saved"], "skipped": result["skipped"]})
-        output_fn(
-            "Scrape complete: "
+            output_fn("Scraping started. Press Ctrl+C to stop safely.")
+            result = scrape_members(
+                client,
+                source,
+                limit=limit,
+                progress_callback=lambda count: (
+                    output_fn(f"Processed: {count}") if count % 25 == 0 else None
+                ),
+            )
+            record_operation("member_scrape", "success", details={"processed": result["scanned"], "saved": result["saved"], "skipped": result["skipped"]})
+            output_fn(
+                "Scrape complete: "
             f"{result['saved']} saved, {result['skipped']} skipped; "
-            f"{result['total_stored']} unique records stored locally."
-        )
-        return True
+                f"{result['total_stored']} unique records stored locally."
+            )
+            return True
     except KeyboardInterrupt:
         record_operation("member_scrape", "cancelled")
         output_fn("Scraping interrupted. Records saved so far are kept.")
@@ -141,9 +139,3 @@ def run_scraper_menu(
         record_operation("member_scrape", "failure")
         output_fn("Could not scrape this source. Check access and try again.")
         return False
-    finally:
-        if connected:
-            try:
-                client.disconnect()
-            except Exception:
-                pass
