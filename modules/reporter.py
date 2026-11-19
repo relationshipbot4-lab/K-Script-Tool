@@ -15,7 +15,6 @@ from config import DATA_DIR
 
 REPORT_FILE = DATA_DIR / "operation_reports.jsonl"
 _ALLOWED_OPERATIONS = {
-    "telegram_login",
     "csv_import_export",
     "member_scrape",
     "group_join_or_invite",
@@ -110,8 +109,7 @@ def run_report_menu(output_fn=print) -> None:
     )
     output_fn("\nBy operation:")
     labels = {
-        "telegram_login": "Telegram login",
-        "csv_import_export": "CSV import/export",
+                "csv_import_export": "CSV import/export",
         "member_scrape": "Member scrape",
         "group_join_or_invite": "Group join/invite",
     }
