@@ -2,10 +2,11 @@
 
 import inspect
 import unittest
+from unittest.mock import Mock
 
 from telethon.sync import TelegramClient as SyncTelegramClient
 
-from core.telegram import TelegramClient as ConfiguredTelegramClient
+from core.telegram import TelegramClient as ConfiguredTelegramClient, connected_telegram_client
 
 
 class TelegramClientTests(unittest.TestCase):
