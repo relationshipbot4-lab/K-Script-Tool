@@ -17,10 +17,10 @@ class AccountManagerTests(unittest.TestCase):
         user = SimpleNamespace(id=54321, first_name="Test", last_name="User", username="tester", phone="+12345678901")
         out = []
         _display_profile(user, out.append)
-        self.assertIn("User ID: 54321", "\\n".join(out))
-        self.assertIn("Name: Test User", "\\n".join(out))
-        self.assertIn("Username: @tester", "\\n".join(out))
-        self.assertIn("Phone: ***901", "\\n".join(out))
+        self.assertIn("User ID: 54321", "\n".join(out))
+        self.assertIn("Name: Test User", "\n".join(out))
+        self.assertIn("Username: @tester", "\n".join(out))
+        self.assertIn("Phone: ***901", "\n".join(out))
         self.assertNotIn("+12345678901", "\n".join(out))
 
     def test_unauthorized_session_reports_no_active_login(self):
