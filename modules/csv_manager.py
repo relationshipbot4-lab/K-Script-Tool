@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from modules.storage import DEFAULT_DB_PATH, MemberStore
+from modules.reporter import record_operation
 
 CSV_FIELDS = (
     "user_id",
@@ -183,9 +184,11 @@ def run_csv_menu(
             destination = destination.with_suffix(".csv")
         try:
             count = export_members(destination)
+            record_operation("csv_import_export", "success", details={"total": count})
             output_fn(f"Export complete: {count} member(s) written to {destination}.")
             return True
         except (OSError, csv.Error):
+            record_operation("csv_import_export", "failure")
             output_fn("Export failed. Check the destination path and permissions.")
             return False
 
@@ -196,10 +199,12 @@ def run_csv_menu(
             return False
         source = Path(raw_path).expanduser()
         if input_fn(f"Import records from {source}? [y/N]: ").strip().lower() != "y":
+            record_operation("csv_import_export", "cancelled")
             output_fn("Import cancelled.")
             return False
         try:
             result = import_members(source)
+            record_operation("csv_import_export", "success", details={"total": result["imported"], "invalid": result["invalid_rows"], "duplicates": result["duplicate_rows"]})
             output_fn(
                 f"Import complete: {result['imported']} unique member(s) processed, "
                 f"{result['duplicate_rows']} duplicate row(s), "
@@ -211,6 +216,7 @@ def run_csv_menu(
                 output_fn(f"...and {len(result['errors']) - 10} more invalid row(s).")
             return True
         except (OSError, CSVImportError):
+            record_operation("csv_import_export", "failure")
             output_fn("Import failed. Check the CSV file, encoding, and required user_id column.")
             return False
 
