@@ -40,6 +40,20 @@ class ReporterTests(unittest.TestCase):
         record_operation("csv_import_export", "success", path=self.path)
         self.assertEqual(len(read_reports(path=self.path)), 1)
 
+    def test_summary_streams_large_history(self):
+        for i in range(1500):
+            record_operation("member_scrape", "success" if i % 2 == 0 else "failure", path=self.path)
+        summary = summarize_reports(path=self.path)
+        self.assertEqual(summary["total"], 1500)
+        self.assertEqual(summary["success"], 750)
+        self.assertEqual(summary["failure"], 750)
+        self.assertEqual(len(read_reports(limit=15, path=self.path)), 15)
+
+    def test_bool_values_are_not_saved_as_counts(self):
+        record_operation("member_scrape", "success", details={"saved": True, "total": 4}, path=self.path)
+        event = json.loads(self.path.read_text(encoding="utf-8").splitlines()[0])
+        self.assertEqual(event["details"], {"total": 4})
+
     def test_read_limit_validation(self):
         with self.assertRaises(ValueError):
             read_reports(limit=0, path=self.path)
