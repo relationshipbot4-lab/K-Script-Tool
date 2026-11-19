@@ -8,6 +8,11 @@ from modules.invite import run_invite_menu
 from modules.reporter import run_report_menu
 
 
+def clear_screen() -> None:
+    """Clear and reposition the terminal cursor using portable ANSI sequences."""
+    print("\033[2J\033[H", end="", flush=True)
+
+
 def show_banner() -> None:
     print("\033[96m")
     print("╔══════════════════════════════════════╗")
@@ -29,6 +34,7 @@ def show_menu() -> None:
 
 
 def main() -> None:
+    clear_screen()
     show_banner()
     while True:
         show_menu()
@@ -49,6 +55,10 @@ def main() -> None:
             run_report_menu()
         else:
             print("Invalid option. Please choose 0-5.")
+
+        if choice in {"1", "2", "3", "4", "5"}:
+            clear_screen()
+            show_banner()
 
 
 if __name__ == "__main__":
