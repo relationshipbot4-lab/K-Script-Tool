@@ -42,7 +42,7 @@ class ScraperTests(unittest.TestCase):
         self.assertEqual(result["saved"], 2)
         self.assertEqual(result["skipped"], 2)
         self.assertEqual(set(store.members), {1, 4})
-        self.assertEqual(progress, [1, 4])
+        self.assertEqual(progress, [1, 2, 3, 4])
         client.get_entity.assert_called_once_with("testgroup")
 
     def test_stop_event_stops_before_processing_next_member(self):
