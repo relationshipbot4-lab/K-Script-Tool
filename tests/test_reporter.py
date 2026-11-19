@@ -40,6 +40,16 @@ class ReporterTests(unittest.TestCase):
         record_operation("csv_import_export", "success", path=self.path)
         self.assertEqual(len(read_reports(path=self.path)), 1)
 
+    def test_invalid_and_terminal_control_timestamps_are_skipped(self):
+        event = {
+            "timestamp": "2026-11-19T00:00:00+00:00\\u001b[2J",
+            "operation": "member_scrape",
+            "outcome": "success",
+            "details": {},
+        }
+        self.path.write_text(json.dumps(event) + "\\n", encoding="utf-8")
+        self.assertEqual(read_reports(path=self.path), [])
+
     def test_summary_streams_large_history(self):
         for i in range(1500):
             record_operation("member_scrape", "success" if i % 2 == 0 else "failure", path=self.path)
