@@ -37,7 +37,7 @@ class ReporterTests(unittest.TestCase):
 
     def test_corrupt_lines_skipped(self):
         self.path.write_text("{broken json}\n", encoding="utf-8")
-        record_operation("telegram_login", "success", path=self.path)
+        record_operation("csv_import_export", "success", path=self.path)
         self.assertEqual(len(read_reports(path=self.path)), 1)
 
     def test_read_limit_validation(self):
