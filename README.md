@@ -10,7 +10,7 @@ A Python-based Telegram group management utility designed for Android Termux.
 
 ## Current status
 
-Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Phase 5 adds public-group joining via Telegram's normal join request, private invite-link importing, and authorized invite-link creation. Activity reports are planned for Phase 6.
+Phase 2 adds interactive Telegram account authentication with OTP and optional two-step verification (2FA). Phase 3 adds authorized member scraping and local SQLite storage. Phase 4 adds CSV import/export for locally stored member records. Phase 5 adds public-group joining via Telegram's normal join request, private invite-link importing, and authorized invite-link creation. Phase 6 adds a sanitized local activity history for CSV import/export, member scraping, and group join/invite operations, plus a summary report.
 
 The tool is intended for groups you own or are authorized to manage. It must respect Telegram permissions, user privacy settings, rate limits, and anti-spam protections. It does not bypass invite restrictions or attempt to evade FloodWait limits.
 

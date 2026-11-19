@@ -6,6 +6,7 @@ from typing import Any
 
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.messages import ExportChatInviteRequest
+from modules.reporter import record_operation
 
 
 class InviteLinkError(RuntimeError):
@@ -63,20 +64,24 @@ def run_invite_menu(input_fn=input, output_fn=print) -> bool:
             return False
         if choice == "1":
             result = join_group(client, target)
+            record_operation("group_join_or_invite", "success")
             if result["status"] == "already_joined":
                 output_fn(f"Already joined: {result['title']}")
             else:
                 output_fn(f"Joined successfully: {result['title']}")
             return True
         result = create_invite_link(client, target)
+        record_operation("group_join_or_invite", "success")
         output_fn(f"Group: {result['title']}")
         output_fn(f"Invite link: {result['link']}")
         output_fn("Share only with people who want to join.")
         return True
     except (InviteLinkError, GroupJoinError) as exc:
+        record_operation("group_join_or_invite", "failure")
         output_fn(str(exc))
         return False
     except Exception:
+        record_operation("group_join_or_invite", "failure")
         output_fn("Operation failed. Check group access and try again.")
         return False
     finally:

@@ -10,6 +10,7 @@ from telethon.errors import FloodWaitError
 
 from core.telegram import create_telegram_client
 from modules.storage import DEFAULT_DB_PATH, MemberStore
+from modules.reporter import record_operation
 
 
 class ScrapeRateLimitError(RuntimeError):
@@ -121,6 +122,7 @@ def run_scraper_menu(
                 output_fn(f"Processed: {count}") if count % 25 == 0 else None
             ),
         )
+        record_operation("member_scrape", "success", details={"processed": result["scanned"], "saved": result["saved"], "skipped": result["skipped"]})
         output_fn(
             "Scrape complete: "
             f"{result['saved']} saved, {result['skipped']} skipped; "
@@ -128,12 +130,15 @@ def run_scraper_menu(
         )
         return True
     except KeyboardInterrupt:
+        record_operation("member_scrape", "cancelled")
         output_fn("Scraping interrupted. Records saved so far are kept.")
         return False
     except ScrapeRateLimitError as exc:
+        record_operation("member_scrape", "failure")
         output_fn(str(exc))
     except Exception:
         # Do not expose raw Telegram RPC errors or account metadata.
+        record_operation("member_scrape", "failure")
         output_fn("Could not scrape this source. Check access and try again.")
         return False
     finally:
