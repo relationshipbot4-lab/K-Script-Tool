@@ -31,7 +31,7 @@ class JoinTests(unittest.TestCase):
     def test_join_flood_wait(self):
         client = Mock()
         client.get_entity.return_value = object()
-        client.side_effect = FloodWaitError(request=None, seconds=42)
+        client.side_effect = FloodWaitError(None, 42)
         with self.assertRaisesRegex(GroupJoinError, "42 seconds"):
             join_group(client, "group")
 
@@ -46,7 +46,7 @@ class InviteTests(unittest.TestCase):
     def test_invite_flood_wait(self):
         client = Mock()
         client.get_entity.return_value = object()
-        client.side_effect = FloodWaitError(request=None, seconds=13)
+        client.side_effect = FloodWaitError(None, 13)
         with self.assertRaisesRegex(InviteLinkError, "13 seconds"):
             create_invite_link(client, "group")
 
