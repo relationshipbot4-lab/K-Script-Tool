@@ -37,7 +37,7 @@ def create_invite_link(client: Any, group: str | int) -> dict[str, str]:
 
 def run_invite_menu(input_fn=input, output_fn=print) -> bool:
     """Interactive menu for joining via link or creating an invite link."""
-    from core.telegram import create_telegram_client
+    from core.telegram import create_telegram_client, connected_telegram_client
     from modules.join_manager import GroupJoinError, join_group
 
     output_fn("\n[1] Join group (public username or valid invite link)")
@@ -55,27 +55,25 @@ def run_invite_menu(input_fn=input, output_fn=print) -> bool:
         return False
 
     client = create_telegram_client()
-    connected = False
     try:
-        client.connect()
-        connected = True
-        if not client.is_user_authorized():
-            output_fn("Please choose [1] Telegram account setup first.")
-            return False
-        if choice == "1":
-            result = join_group(client, target)
+        with connected_telegram_client(client):
+            if not client.is_user_authorized():
+                output_fn("Please choose [1] Telegram account setup first.")
+                return False
+            if choice == "1":
+                result = join_group(client, target)
+                record_operation("group_join_or_invite", "success")
+                if result["status"] == "already_joined":
+                    output_fn(f"Already joined: {result['title']}")
+                else:
+                    output_fn(f"Joined successfully: {result['title']}")
+                return True
+            result = create_invite_link(client, target)
             record_operation("group_join_or_invite", "success")
-            if result["status"] == "already_joined":
-                output_fn(f"Already joined: {result['title']}")
-            else:
-                output_fn(f"Joined successfully: {result['title']}")
+            output_fn(f"Group: {result['title']}")
+            output_fn(f"Invite link: {result['link']}")
+            output_fn("Share only with people who want to join.")
             return True
-        result = create_invite_link(client, target)
-        record_operation("group_join_or_invite", "success")
-        output_fn(f"Group: {result['title']}")
-        output_fn(f"Invite link: {result['link']}")
-        output_fn("Share only with people who want to join.")
-        return True
     except (InviteLinkError, GroupJoinError) as exc:
         record_operation("group_join_or_invite", "failure")
         output_fn(str(exc))
@@ -84,9 +82,3 @@ def run_invite_menu(input_fn=input, output_fn=print) -> bool:
         record_operation("group_join_or_invite", "failure")
         output_fn("Operation failed. Check group access and try again.")
         return False
-    finally:
-        if connected:
-            try:
-                client.disconnect()
-            except Exception:
-                pass
