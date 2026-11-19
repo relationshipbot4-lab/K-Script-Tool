@@ -7,9 +7,10 @@ stored.
 from __future__ import annotations
 
 import json
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from config import DATA_DIR
 
@@ -20,6 +21,7 @@ _ALLOWED_OPERATIONS = {
     "group_join_or_invite",
 }
 _ALLOWED_OUTCOMES = {"success", "failure", "cancelled"}
+_ALLOWED_DETAIL_KEYS = {"processed", "saved", "skipped", "invalid", "duplicates", "total"}
 
 
 def record_operation(
@@ -34,7 +36,7 @@ def record_operation(
         return False
     safe_details: dict[str, int] = {}
     for key, value in (details or {}).items():
-        if key in {"processed", "saved", "skipped", "invalid", "duplicates", "total"} and isinstance(value, int) and value >= 0:
+        if key in _ALLOWED_DETAIL_KEYS and isinstance(value, int) and not isinstance(value, bool) and value >= 0:
             safe_details[key] = value
     event = {
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -52,50 +54,56 @@ def record_operation(
         return False
 
 
-def read_reports(*, limit: int = 100, path: str | Path = REPORT_FILE) -> list[dict[str, Any]]:
-    """Read valid events, tolerate malformed lines, and return newest first."""
-    if limit < 1:
-        raise ValueError("limit must be positive.")
+def _iter_valid_events(path: str | Path) -> Iterator[dict[str, Any]]:
+    """Yield well-shaped events line-by-line; malformed records are ignored."""
     target = Path(path)
-    if not target.is_file():
-        return []
-    events: list[dict[str, Any]] = []
     try:
         with target.open("r", encoding="utf-8") as handle:
             for line in handle:
                 try:
                     event = json.loads(line)
-                    if (
-                        isinstance(event, dict)
-                        and event.get("operation") in _ALLOWED_OPERATIONS
-                        and event.get("outcome") in _ALLOWED_OUTCOMES
-                        and isinstance(event.get("timestamp"), str)
-                    ):
-                        events.append(event)
                 except json.JSONDecodeError:
                     continue
-    except OSError:
-        return []
-    return events[-limit:][::-1]
+                if (
+                    isinstance(event, dict)
+                    and event.get("operation") in _ALLOWED_OPERATIONS
+                    and event.get("outcome") in _ALLOWED_OUTCOMES
+                    and isinstance(event.get("timestamp"), str)
+                ):
+                    yield event
+    except (OSError, UnicodeDecodeError):
+        return
+
+
+def read_reports(*, limit: int = 100, path: str | Path = REPORT_FILE) -> list[dict[str, Any]]:
+    """Read at most limit valid events into memory and return newest first."""
+    if limit < 1:
+        raise ValueError("limit must be positive.")
+    recent: deque[dict[str, Any]] = deque(maxlen=limit)
+    for event in _iter_valid_events(path):
+        recent.append(event)
+    return list(reversed(recent))
 
 
 def summarize_reports(*, path: str | Path = REPORT_FILE) -> dict[str, Any]:
-    events = read_reports(limit=10**9, path=path)
-    counts = {
-        "total": len(events),
-        "success": sum(event["outcome"] == "success" for event in events),
-        "failure": sum(event["outcome"] == "failure" for event in events),
-        "cancelled": sum(event["outcome"] == "cancelled" for event in events),
-        "by_operation": {},
+    """Summarize all events using constant memory regardless of file size."""
+    counts: dict[str, Any] = {
+        "total": 0,
+        "success": 0,
+        "failure": 0,
+        "cancelled": 0,
+        "by_operation": {
+            operation: {"total": 0, "success": 0, "failure": 0, "cancelled": 0}
+            for operation in sorted(_ALLOWED_OPERATIONS)
+        },
     }
-    for operation in sorted(_ALLOWED_OPERATIONS):
-        operation_events = [e for e in events if e["operation"] == operation]
-        counts["by_operation"][operation] = {
-            "total": len(operation_events),
-            "success": sum(e["outcome"] == "success" for e in operation_events),
-            "failure": sum(e["outcome"] == "failure" for e in operation_events),
-            "cancelled": sum(e["outcome"] == "cancelled" for e in operation_events),
-        }
+    for event in _iter_valid_events(path):
+        operation = event["operation"]
+        outcome = event["outcome"]
+        counts["total"] += 1
+        counts[outcome] += 1
+        counts["by_operation"][operation]["total"] += 1
+        counts["by_operation"][operation][outcome] += 1
     return counts
 
 
@@ -109,7 +117,7 @@ def run_report_menu(output_fn=print) -> None:
     )
     output_fn("\nBy operation:")
     labels = {
-                "csv_import_export": "CSV import/export",
+        "csv_import_export": "CSV import/export",
         "member_scrape": "Member scrape",
         "group_join_or_invite": "Group join/invite",
     }
