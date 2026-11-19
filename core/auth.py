@@ -25,8 +25,8 @@ from core.telegram import connected_telegram_client
 
 def _normalize_phone(value: str) -> str:
     """Normalize a phone number to a conservative international format."""
-    phone = re.sub(r"[\\s()-]", "", value)
-    if not re.fullmatch(r"\\+[1-9]\\d{7,14}", phone):
+    phone = re.sub(r"[\s()-]", "", value)
+    if not re.fullmatch(r"\+[1-9]\d{7,14}", phone):
         raise ValueError("Enter a valid international phone number, e.g. +1234567890.")
     return phone
 
