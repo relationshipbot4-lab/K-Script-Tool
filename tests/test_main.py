@@ -36,7 +36,16 @@ class MainMenuTests(unittest.TestCase):
         self.assertEqual(clear_mock.call_count, 2)
         self.assertEqual(banner_mock.call_count, 2)
 
-    def test_invalid_option_does_not_clear_before_message_is_printed(self):
+    def test_account_management_menu_routes_to_handler(self):
+        with patch.object(main, "clear_screen"), patch.object(
+            main, "show_banner"
+        ), patch.object(main, "show_menu"), patch.object(
+            main, "run_account_management_menu"
+        ) as account_mock, patch("builtins.input", side_effect=["6", "0"]):
+            main.main()
+        account_mock.assert_called_once()
+
+    def test_invalid_option_message(self):
         output = StringIO()
         with patch.object(main, "clear_screen"), patch.object(
             main, "show_banner"
@@ -44,7 +53,7 @@ class MainMenuTests(unittest.TestCase):
             "builtins.input", side_effect=["invalid", "0"]
         ), redirect_stdout(output):
             main.main()
-        self.assertIn("Invalid option. Please choose 0-5.", output.getvalue())
+        self.assertIn("Invalid option. Please choose 0-6.", output.getvalue())
 
 
 if __name__ == "__main__":
