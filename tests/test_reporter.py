@@ -42,13 +42,24 @@ class ReporterTests(unittest.TestCase):
 
     def test_invalid_and_terminal_control_timestamps_are_skipped(self):
         event = {
-            "timestamp": "2026-11-19T00:00:00+00:00\\u001b[2J",
+            "timestamp": "2026-11-19T00:00:00+00:00\u001b[2J",
+            "operation": "member_scrape",
+            "outcome": "success",
+            "details": {},
+        }
+        self.path.write_text(json.dumps(event) + "\n", encoding="utf-8")
+        self.assertEqual(read_reports(path=self.path), [])
+
+    def test_timestamp_is_normalized_to_utc(self):
+        event = {
+            "timestamp": "2026-11-19T05:30:00+05:30",
             "operation": "member_scrape",
             "outcome": "success",
             "details": {},
         }
         self.path.write_text(json.dumps(event) + "\\n", encoding="utf-8")
-        self.assertEqual(read_reports(path=self.path), [])
+        reports = read_reports(path=self.path)
+        self.assertEqual(reports[0]["timestamp"], "2026-11-19T00:00:00+00:00")
 
     def test_summary_streams_large_history(self):
         for i in range(1500):
